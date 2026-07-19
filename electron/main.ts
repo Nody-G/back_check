@@ -8,7 +8,7 @@ import { ScanOptions, SyncOptions, Locale } from './types';
 
 let mainWindow: BrowserWindow | null = null;
 
-const isDev = !app.isPackaged;
+const isDev = !app.isPackaged && !process.argv.includes('--screenshots');
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -40,6 +40,41 @@ function createWindow() {
 app.whenReady().then(async () => {
   await initDatabase();
   createWindow();
+  
+  // Auto-capture screenshots if --screenshots flag is passed
+  if (process.argv.includes('--screenshots')) {
+    setTimeout(async () => {
+      const screenshotDir = path.join(__dirname, '..', 'screenshots');
+      if (!fs.existsSync(screenshotDir)) {
+        fs.mkdirSync(screenshotDir, { recursive: true });
+      }
+      
+      const takeScreenshot = async (filePath: string) => {
+        if (!mainWindow) return;
+        const image = await mainWindow.capturePage();
+        fs.writeFileSync(filePath, image.toPNG());
+        console.log(`Screenshot: ${filePath}`);
+      };
+      
+      const navigateTo = async (route: string) => {
+        if (!mainWindow) return;
+        mainWindow.webContents.send('navigate', route);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      };
+      
+      // Capture each page
+      await takeScreenshot(path.join(screenshotDir, '01-scan-page.png'));
+      await navigateTo('history');
+      await takeScreenshot(path.join(screenshotDir, '02-history-page.png'));
+      await navigateTo('settings');
+      await takeScreenshot(path.join(screenshotDir, '03-settings-page.png'));
+      await navigateTo('help');
+      await takeScreenshot(path.join(screenshotDir, '04-help-page.png'));
+      
+      console.log('All screenshots captured!');
+      app.quit();
+    }, 3000); // Wait for app to fully load
+  }
 });
 
 app.on('window-all-closed', () => {
@@ -176,4 +211,22 @@ ipcMain.handle('shell:openPath', async (_event, filePath: string) => {
 
 ipcMain.handle('shell:showItemInFolder', async (_event, filePath: string) => {
   shell.showItemInFolder(filePath);
+});
+
+// ── Screenshot handler (for README captures) ──
+ipcMain.handle('app:takeScreenshot', async (_event, filePath: string) => {
+  if (!mainWindow) return { error: 'No window' };
+  try {
+    const image = await mainWindow.capturePage();
+    const pngData = image.toPNG();
+    fs.writeFileSync(filePath, pngData);
+    return { success: true, path: filePath };
+  } catch (err: any) {
+    return { error: err.message };
+  }
+});
+
+ipcMain.handle('app:navigate', async (_event, route: string) => {
+  if (!mainWindow) return;
+  mainWindow.webContents.send('navigate', route);
 });

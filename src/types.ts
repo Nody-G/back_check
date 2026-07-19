@@ -14,6 +14,9 @@ export interface BackcheckAPI {
   generatePdf: (result: any, locale: string) => Promise<any>;
   openPath: (filePath: string) => Promise<void>;
   showInFolder: (filePath: string) => Promise<void>;
+  takeScreenshot: (filePath: string) => Promise<any>;
+  navigate: (route: string) => Promise<void>;
+  onNavigate: (callback: (route: string) => void) => void;
 }
 
 export interface SyncProgress {

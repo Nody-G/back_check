@@ -24,4 +24,9 @@ contextBridge.exposeInMainWorld('backcheck', {
   generatePdf: (result: any, locale: string): Promise<any> => ipcRenderer.invoke('report:generatePdf', result, locale),
   openPath: (filePath: string): Promise<void> => ipcRenderer.invoke('shell:openPath', filePath),
   showInFolder: (filePath: string): Promise<void> => ipcRenderer.invoke('shell:showItemInFolder', filePath),
+  takeScreenshot: (filePath: string): Promise<any> => ipcRenderer.invoke('app:takeScreenshot', filePath),
+  navigate: (route: string): Promise<void> => ipcRenderer.invoke('app:navigate', route),
+  onNavigate: (callback: (route: string) => void) => {
+    ipcRenderer.on('navigate', (_event: any, route: string) => callback(route));
+  },
 });

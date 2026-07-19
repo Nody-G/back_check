@@ -50,7 +50,17 @@ Backcheck scanne vos dossiers de projets et compare la source avec le backup pou
 
 ## 📸 Captures d'écran
 
-*[À venir — screenshots de l'interface]*
+### Page Scan
+![Scan Page](screenshots/01-scan-page.png)
+
+### Page Historique
+![History Page](screenshots/02-history-page.png)
+
+### Page Paramètres
+![Settings Page](screenshots/03-settings-page.png)
+
+### Page Aide
+![Help Page](screenshots/04-help-page.png)
 
 ---
 

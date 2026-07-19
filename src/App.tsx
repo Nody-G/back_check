@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { t, getLocale, setLocale, Locale } from './i18n';
 import Sidebar from './components/Sidebar';
 import ScanPage from './pages/ScanPage';
@@ -11,6 +11,15 @@ type Page = 'scan' | 'history' | 'settings' | 'help';
 export default function App() {
   const [page, setPage] = useState<Page>('scan');
   const [locale, setLocaleState] = useState<Locale>(getLocale());
+
+  // Listen for navigation commands from main process (for screenshots)
+  useEffect(() => {
+    if (window.backcheck?.onNavigate) {
+      window.backcheck.onNavigate((route: string) => {
+        setPage(route as Page);
+      });
+    }
+  }, []);
 
   const handleLocaleChange = useCallback((newLocale: Locale) => {
     setLocale(newLocale);
