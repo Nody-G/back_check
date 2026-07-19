@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Backcheck — Vérifiez vos backups</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0a0a0f;
+      --bg-card: #12121a;
+      --bg-card-hover: #1a1a25;
+      --border: #1e1e2e;
+      --text: #e8e8f0;
+      --text-muted: #8888a0;
+      --accent: #6c5ce7;
+      --accent-light: #a29bfe;
+      --green: #00b894;
+      --red: #ff6b6b;
+      --orange: #fdcb6e;
+      --blue: #74b9ff;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px 24px;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(ellipse at 30% 20%, rgba(108,92,231,0.15) 0%, transparent 50%),
+                  radial-gradient(ellipse at 70% 80%, rgba(0,184,148,0.1) 0%, transparent 50%);
+      animation: bgPulse 8s ease-in-out infinite alternate;
+    }
+
+    @keyframes bgPulse {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(-2%, -2%) scale(1.05); }
+    }
+
+    .hero-content { position: relative; z-index: 1; max-width: 800px; }
+
+    .logo {
+      font-size: 80px;
+      margin-bottom: 16px;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-12px); }
+    }
+
+    .hero h1 {
+      font-size: 64px;
+      font-weight: 900;
+      letter-spacing: -2px;
+      background: linear-gradient(135deg, #fff 0%, var(--accent-light) 50%, var(--green) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 16px;
+    }
+
+    .hero .tagline {
+      font-size: 22px;
+      color: var(--text-muted);
+      font-weight: 300;
+      margin-bottom: 40px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .hero-badges {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 48px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-muted);
+    }
+
+    .badge-green { border-color: rgba(0,184,148,0.3); color: var(--green); }
+    .badge-blue { border-color: rgba(116,185,255,0.3); color: var(--blue); }
+    .badge-orange { border-color: rgba(253,203,110,0.3); color: var(--orange); }
+
+    .cta-group {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 32px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      border: none;
+    }
+
+    .cta-primary {
+      background: linear-gradient(135deg, var(--accent) 0%, #8b7cf7 100%);
+      color: #fff;
+      box-shadow: 0 4px 24px rgba(108,92,231,0.4);
+    }
+
+    .cta-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(108,92,231,0.6);
+    }
+
+    .cta-secondary {
+      background: var(--bg-card);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .cta-secondary:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--accent);
+    }
+
+    /* ── Sections ── */
+    .section {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 100px 24px;
+    }
+
+    .section-title {
+      font-size: 40px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 12px;
+    }
+
+    .section-subtitle {
+      font-size: 18px;
+      color: var(--text-muted);
+      margin-bottom: 48px;
+      max-width: 600px;
+    }
+
+    /* ── Feature Cards ── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--green));
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .feature-card:hover {
+      border-color: rgba(108,92,231,0.3);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+    }
+
+    .feature-card:hover::before { opacity: 1; }
+
+    .feature-icon {
+      font-size: 36px;
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .feature-card h3 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .feature-card p {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    /* ── How it works ── */
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      position: relative;
+    }
+
+    .steps::before {
+      content: '';
+      position: absolute;
+      left: 28px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--accent), var(--green), var(--blue));
+      opacity: 0.3;
+    }
+
+    .step {
+      display: flex;
+      gap: 24px;
+      padding: 32px 0;
+      position: relative;
+    }
+
+    .step-number {
+      width: 56px;
+      height: 56px;
+      min-width: 56px;
+      border-radius: 50%;
+      background: var(--bg-card);
+      border: 2px solid var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--accent-light);
+      z-index: 1;
+    }
+
+    .step-content h3 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .step-content p {
+      font-size: 15px;
+      color: var(--text-muted);
+    }
+
+    /* ── Status badges demo ── */
+    .status-demo {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 32px;
+    }
+
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .status-ok { background: rgba(0,184,148,0.12); color: var(--green); border: 1px solid rgba(0,184,148,0.2); }
+    .status-missing { background: rgba(255,107,107,0.12); color: var(--red); border: 1px solid rgba(255,107,107,0.2); }
+    .status-modified { background: rgba(253,203,110,0.12); color: var(--orange); border: 1px solid rgba(253,203,110,0.2); }
+    .status-error { background: rgba(255,107,107,0.08); color: #ff8787; border: 1px solid rgba(255,107,107,0.15); }
+
+    /* ── Tech stack ── */
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .tech-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .tech-card:hover {
+      border-color: rgba(108,92,231,0.3);
+      transform: translateY(-2px);
+    }
+
+    .tech-card .icon { font-size: 32px; margin-bottom: 8px; display: block; }
+    .tech-card .name { font-weight: 700; font-size: 15px; }
+    .tech-card .desc { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+    /* ── Screenshot mockup ── */
+    .mockup-container {
+      margin: 48px 0;
+      position: relative;
+    }
+
+    .mockup {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+    }
+
+    .mockup-titlebar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 18px;
+      background: #0e0e16;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .dot-red { background: #ff5f57; }
+    .dot-yellow { background: #febc2e; }
+    .dot-green { background: #28c840; }
+
+    .mockup-titlebar span {
+      margin-left: 12px;
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .mockup-body {
+      padding: 32px;
+      min-height: 300px;
+      display: flex;
+      gap: 24px;
+    }
+
+    .mock-sidebar {
+      width: 200px;
+      min-width: 200px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .mock-nav {
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mock-nav.active {
+      background: rgba(108,92,231,0.15);
+      color: var(--accent-light);
+    }
+
+    .mock-content { flex: 1; }
+
+    .mock-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .mock-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .mock-stat {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .mock-stat .num {
+      font-size: 28px;
+      font-weight: 800;
+      display: block;
+    }
+
+    .mock-stat .label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .mock-bar {
+      height: 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.05);
+      overflow: hidden;
+      margin-top: 12px;
+    }
+
+    .mock-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--accent), var(--green));
+      animation: barFill 2s ease-out forwards;
+    }
+
+    @keyframes barFill {
+      from { width: 0; }
+      to { width: 75%; }
+    }
+
+    /* ── Footer ── */
+    .footer {
+      text-align: center;
+      padding: 48px 24px;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .footer a {
+      color: var(--accent-light);
+      text-decoration: none;
+    }
+
+    .footer a:hover { text-decoration: underline; }
+
+    /* ── Scroll animations ── */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.6s ease;
+    }
+
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 40px; }
+      .hero .tagline { font-size: 17px; }
+      .section-title { font-size: 28px; }
+      .mockup-body { flex-direction: column; }
+      .mock-sidebar { width: 100%; flex-direction: row; overflow-x: auto; }
+      .mock-stats { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════ HERO ═══════════ -->
+  <section class="hero">
+    <div class="hero-content">
+      <div class="logo">🛡️</div>
+      <h1>Backcheck</h1>
+      <p class="tagline">
+        Vérifiez que vos backups sont à jour, intègres et complets.<br>
+        En un clic. Sans risque.
+      </p>
+      <div class="hero-badges">
+        <span class="badge badge-green">✅ 100% lecture seule</span>
+        <span class="badge badge-blue">⚡ SHA-256 checksums</span>
+        <span class="badge badge-orange">📊 Rapports HTML & PDF</span>
+      </div>
+      <div class="cta-group">
+        <a href="#features" class="cta cta-primary">✨ Découvrir les fonctionnalités</a>
+        <a href="#how" class="cta cta-secondary">📖 Comment ça marche</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ FEATURES ═══════════ -->
+  <section class="section fade-in" id="features">
+    <h2 class="section-title">✨ Fonctionnalités</h2>
+    <p class="section-subtitle">Tout ce qu'il faut pour auditer vos backups en toute confiance.</p>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <span class="feature-icon">🔍</span>
+        <h3>Scan approfondi</h3>
+        <p>Comparez un dossier source avec son backup fichier par fichier. Détection des fichiers manquants, modifiés et corrompus.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🔐</span>
+        <h3>Checksums SHA-256</h3>
+        <p>Vérification bit-par-bit de l'intégrité. Deux fichiers de même taille peuvent être différents — Backcheck le détecte.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📊</span>
+        <h3>Rapports détaillés</h3>
+        <p>Exportez vos résultats en HTML ou PDF. Cartes de résumé, table détaillée, filtres par statut.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🔄</span>
+        <h3>Sync backup</h3>
+        <p>Synchronisez votre backup en un clic : copie les fichiers manquants, remplace les modifiés, supprime les orphelins.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📈</span>
+        <h3>Progression temps réel</h3>
+        <p>Visualisez l'avancement du scan en temps réel : phase en cours, nombre de fichiers, pourcentage, fichier traité.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📋</span>
+        <h3>Historique</h3>
+        <p>Retrouvez tous vos scans passés avec leurs résultats. Comparez l'évolution de vos backups dans le temps.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🌐</span>
+        <h3>Bilingue FR/EN</h3>
+        <p>Interface entièrement traduite en français et anglais. Votre préférence est sauvegardée automatiquement.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🛡️</span>
+        <h3>100% sûr</h3>
+        <p>Backcheck ne modifie jamais vos fichiers. Lecture seule garantie. Vos données ne sont jamais touchées.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📁</span>
+        <h3>Multi-projets</h3>
+        <p>Scannez un seul projet ou tous vos projets en une fois. Compatible avec les dossiers de 1 Go à 5 To.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ HOW IT WORKS ═══════════ -->
+  <section class="section fade-in" id="how">
+    <h2 class="section-title">📖 Comment ça marche</h2>
+    <p class="section-subtitle">Trois étapes simples pour vérifier vos backups.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-number">1</div>
+        <div class="step-content">
+          <h3>📂 Sélectionnez vos dossiers</h3>
+          <p>Choisissez le dossier source (vos projets originaux) et le dossier backup (NAS, disque externe, etc.). Vous pouvez aussi coller le chemin directement.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-number">2</div>
+        <div class="step-content">
+          <h3>🔍 Lancez le scan</h3>
+          <p>Backcheck parcourt récursivement les deux dossiers, compare les fichiers par taille puis par checksum SHA-256. La progression s'affiche en temps réel.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-number">3</div>
+        <div class="step-content">
+          <h3>📊 Analysez les résultats</h3>
+          <p>Consultez le résumé : fichiers identiques, manquants, modifiés. Filtrez par statut. Exportez en HTML/PDF. Synchronisez si nécessaire.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status chips -->
+    <div class="status-demo">
+      <span class="status-chip status-ok">✅ Identique</span>
+      <span class="status-chip status-missing">❌ Manquant</span>
+      <span class="status-chip status-modified">⚠️ Modifié</span>
+      <span class="status-chip status-error">🚫 Erreur</span>
+    </div>
+  </section>
+
+  <!-- ═══════════ MOCKUP ═══════════ -->
+  <section class="section fade-in">
+    <h2 class="section-title">🖥️ Aperçu</h2>
+    <p class="section-subtitle">Interface dark, moderne et épurée.</p>
+
+    <div class="mockup-container">
+      <div class="mockup">
+        <div class="mockup-titlebar">
+          <div class="dot dot-red"></div>
+          <div class="dot dot-yellow"></div>
+          <div class="dot dot-green"></div>
+          <span>Backcheck — Résultat du scan</span>
+        </div>
+        <div class="mockup-body">
+          <div class="mock-sidebar">
+            <div class="mock-nav">🔍 Scanner</div>
+            <div class="mock-nav active">📊 Résultats</div>
+            <div class="mock-nav">📋 Historique</div>
+            <div class="mock-nav">⚙️ Paramètres</div>
+            <div class="mock-nav">❓ Aide</div>
+          </div>
+          <div class="mock-content">
+            <div class="mock-stats">
+              <div class="mock-stat">
+                <span class="num" style="color: var(--text)">1,247</span>
+                <span class="label">Fichiers total</span>
+              </div>
+              <div class="mock-stat">
+                <span class="num" style="color: var(--green)">1,180</span>
+                <span class="label">Identiques</span>
+              </div>
+              <div class="mock-stat">
+                <span class="num" style="color: var(--red)">42</span>
+                <span class="label">Manquants</span>
+              </div>
+              <div class="mock-stat">
+                <span class="num" style="color: var(--orange)">25</span>
+                <span class="label">Modifiés</span>
+              </div>
+            </div>
+            <div class="mock-card">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-size: 13px; font-weight: 600;">Progression du scan</span>
+                <span style="font-size: 12px; color: var(--text-muted);">75% — 935 / 1,247 fichiers</span>
+              </div>
+              <div class="mock-bar">
+                <div class="mock-bar-fill"></div>
+              </div>
+            </div>
+            <div class="mock-card" style="font-size: 13px; color: var(--text-muted);">
+              <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border);">
+                <span>📁 FINALS/export_4k.mp4</span>
+                <span class="status-chip status-ok" style="padding: 4px 10px; font-size: 12px;">✅ OK</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border);">
+                <span>📁 MUSIC/master.wav</span>
+                <span class="status-chip status-missing" style="padding: 4px 10px; font-size: 12px;">❌ Manquant</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 8px 0;">
+                <span>📁 PROJET/sequence_01.prproj</span>
+                <span class="status-chip status-modified" style="padding: 4px 10px; font-size: 12px;">⚠️ Modifié</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ TECH STACK ═══════════ -->
+  <section class="section fade-in">
+    <h2 class="section-title">🛠️ Stack technique</h2>
+    <p class="section-subtitle">Construit avec des technologies modernes et fiables.</p>
+
+    <div class="tech-grid">
+      <div class="tech-card">
+        <span class="icon">⚛️</span>
+        <div class="name">React 18</div>
+        <div class="desc">Interface réactive</div>
+      </div>
+      <div class="tech-card">
+        <span class="icon">🔷</span>
+        <div class="name">TypeScript</div>
+        <div class="desc">Typage strict</div>
+      </div>
+      <div class="tech-card">
+        <span class="icon">⚡</span>
+        <div class="name">Vite 6</div>
+        <div class="desc">Build ultra-rapide</div>
+      </div>
+      <div class="tech-card">
+        <span class="icon">🖥️</span>
+        <div class="name">Electron</div>
+        <div class="desc">Desktop natif</div>
+      </div>
+      <div class="tech-card">
+        <span class="icon">🗄️</span>
+        <div class="name">sql.js</div>
+        <div class="desc">SQLite WASM</div>
+      </div>
+      <div class="tech-card">
+        <span class="icon">🔐</span>
+        <div class="name">SHA-256</div>
+        <div class="desc">Intégrité garantie</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ SAFETY ═══════════ -->
+  <section class="section fade-in">
+    <h2 class="section-title">🛡️ Sécurité</h2>
+    <p class="section-subtitle">Vos fichiers ne sont jamais modifiés. Jamais.</p>
+
+    <div class="features-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+      <div class="feature-card" style="border-color: rgba(0,184,148,0.2);">
+        <span class="feature-icon">👁️</span>
+        <h3>Lecture seule</h3>
+        <p>Backcheck ne fait que lire vos fichiers. Aucune écriture, aucune suppression, aucune modification.</p>
+      </div>
+      <div class="feature-card" style="border-color: rgba(0,184,148,0.2);">
+        <span class="feature-icon">✅</span>
+        <h3>Confirmation obligatoire</h3>
+        <p>La synchronisation demande toujours une confirmation avant d'agir. Vous voyez exactement ce qui va se passer.</p>
+      </div>
+      <div class="feature-card" style="border-color: rgba(0,184,148,0.2);">
+        <span class="feature-icon">🏠</span>
+        <h3>100% local</h3>
+        <p>Aucune donnée envoyée sur Internet. Tout reste sur votre machine. Pas de compte, pas de cloud.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════ FOOTER ═══════════ -->
+  <footer class="footer">
+    <p style="font-size: 24px; margin-bottom: 12px;">🛡️</p>
+    <p style="font-weight: 600; margin-bottom: 4px;">Backcheck</p>
+    <p>Vos backups méritent d'être vérifiés.</p>
+    <p style="margin-top: 16px; font-size: 12px; color: #555;">
+      Fait avec ❤️ — Electron + React + TypeScript
+    </p>
+  </footer>
+
+  <!-- ═══════════ SCROLL ANIMATION ═══════════ -->
+  <script>
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+  </script>
+
+</body>
+</html>
